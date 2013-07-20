@@ -62,7 +62,8 @@ class batcache {
 	var $use_stale        = true; // Is it ok to return stale cached response when updating the cache?
 	var $uncached_headers = array('transfer-encoding'); // These headers will never be cached. Apply strtolower.
 
-	var $debug   = true; // Set false to hide the batcache info <!-- comment -->
+	var $debug        = true; // Set false to hide the batcache info <!-- comment -->
+	var $debug_header = false; // Set false to hide the batcache info header
 
 	var $cache_control = true; // Set false to disable Last-Modified and Cache-Control headers
 
@@ -236,6 +237,14 @@ class batcache {
 		// Add some debug info just before <head
 		if ( $this->debug ) {
 			$this->add_debug_just_cached();
+		}
+		if ( $this->debug_header ) {
+			header(sprintf(
+				"X-batcache: Caching, generated in %ums, expires in %us (%us TTL)",
+				$cache['timer'] * 1000,
+				$this->max_age,
+                                $this->max_age
+			), true);
 		}
 
 		// Pass output to next ob handler
@@ -515,6 +524,15 @@ if ( isset( $batcache->cache['time'] ) && // We have cache
 	// Add some debug info just before </head>
 	if ( $batcache->debug ) {
 		$batcache->add_debug_from_cache();
+	}
+	if ( $batcache->debug_header ) {
+		header(sprintf(
+			"X-batcache: Cached, generated in %ums, expires in %us (%us TTL), served in %ums",
+			$batcache->cache['timer'] * 1000,
+			$batcache->max_age - time() + $batcache->cache['time'],
+                        $batcache->max_age,
+			$batcache->timer_stop(false, 3) * 1000
+		), true);
 	}
 
 	$batcache->do_headers( $batcache->headers, $batcache->cache['headers'] );
