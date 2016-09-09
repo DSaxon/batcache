@@ -239,12 +239,7 @@ class batcache {
 			$this->add_debug_just_cached();
 		}
 		if ( $this->debug_header ) {
-			header(sprintf(
-				"X-batcache: Caching, generated in %ums, expires in %us (%us TTL)",
-				$cache['timer'] * 1000,
-				$this->max_age,
-                                $this->max_age
-			), true);
+			$this->add_debug_header_just_cached();
 		}
 
 		// Pass output to next ob handler
@@ -278,6 +273,26 @@ class batcache {
 		// ksort($this->keys); // uncomment this when traffic is slow
 		$this->key = md5(serialize($this->keys));
 		$this->req_key = $this->key . '_reqs';
+	}
+
+	function add_debug_header_just_cached() {
+		header(sprintf(
+			"X-batcache: MISS, generated in %ums, expires in %us (%us TTL)",
+			$this->cache['timer'] * 1000,
+			$this->max_age,
+			$this->max_age
+		), true);
+	}
+
+	function add_debug_header_from_cache( $using_stale ) {
+		header(sprintf(
+			"X-batcache: %s, generated in %ums, expires in %us (%us TTL), served in %ums",
+			$using_stale ? 'STALE' : 'HIT',
+			$this->cache['timer'] * 1000,
+			$this->max_age - time() + $this->cache['time'],
+			$this->max_age,
+			$this->timer_stop(false, 3) * 1000
+		), true);
 	}
 
 	function add_debug_just_cached() {
@@ -471,6 +486,10 @@ if ( isset( $batcache->cache['time'] ) && // We have cache
 		$is_IIS = (strpos($_SERVER['SERVER_SOFTWARE'], 'Microsoft-IIS') !== false || strpos($_SERVER['SERVER_SOFTWARE'], 'ExpressionDevServer') !== false);
 
 		$batcache->do_headers( $batcache->headers );
+		if ( $batcache->debug_header ) {
+			$batcache->add_debug_header_from_cache( $batcache->do && $batcache->use_stale );
+		}
+
 		if ( $is_IIS ) {
 			header("Refresh: 0;url=$location");
 		} else {
@@ -526,13 +545,7 @@ if ( isset( $batcache->cache['time'] ) && // We have cache
 		$batcache->add_debug_from_cache();
 	}
 	if ( $batcache->debug_header ) {
-		header(sprintf(
-			"X-batcache: Cached, generated in %ums, expires in %us (%us TTL), served in %ums",
-			$batcache->cache['timer'] * 1000,
-			$batcache->max_age - time() + $batcache->cache['time'],
-                        $batcache->max_age,
-			$batcache->timer_stop(false, 3) * 1000
-		), true);
+		$batcache->add_debug_header_from_cache( $batcache->do && $batcache->use_stale );
 	}
 
 	$batcache->do_headers( $batcache->headers, $batcache->cache['headers'] );
