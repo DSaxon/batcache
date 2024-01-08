@@ -369,13 +369,14 @@ if ( ! empty( file_get_contents("php://input") ) || ! empty( $_POST ) ||
 }
 
 // Never batcache when cookies indicate a cache-exempt visitor.
-if ( is_array( $_COOKIE) && ! empty( $_COOKIE ) ) {
-	foreach ( array_keys( $_COOKIE ) as $batcache->cookie ) {
-		if ( ! in_array( $batcache->cookie, $batcache->noskip_cookies ) && ( substr( $batcache->cookie, 0, 2 ) == 'wp' || substr( $batcache->cookie, 0, 9 ) == 'wordpress' || substr( $batcache->cookie, 0, 14 ) == 'comment_author' ) ) {
-			batcache_stats( 'batcache', 'cookie_skip' );
-			return;
-		}
-	}
+if ( is_array( $_COOKIE ) && ! empty( $_COOKIE ) ) {
+    foreach ( array_keys( $_COOKIE ) as $current_cookie ) {
+        // Use $current_cookie instead of $batcache->cookie
+        if ( ! in_array( $current_cookie, $batcache->noskip_cookies ) && ( substr( $current_cookie, 0, 2 ) == 'wp' || substr( $current_cookie, 0, 9 ) == 'wordpress' || substr( $current_cookie, 0, 14 ) == 'comment_author' ) ) {
+            batcache_stats( 'batcache', 'cookie_skip' );
+            return;
+        }
+    }
 }
 
 if ( ! include_once( WP_CONTENT_DIR . '/object-cache.php' ) )
