@@ -423,12 +423,13 @@ header('Vary: Cookie', false);
 if ( isset( $_SERVER['QUERY_STRING'] ) )
 	parse_str($_SERVER['QUERY_STRING'], $batcache->query);
 
+// Assign the value to a temporary variable
+$pos = strpos($_SERVER['REQUEST_URI'], '?');
+
+// Update the 'path' parameter using the temporary variable
 $batcache->keys = array(
 	'host' => $_SERVER['HTTP_HOST'],
 	'method' => $_SERVER['REQUEST_METHOD'],
-	// Assign the value to a temporary variable
-	$pos = strpos($_SERVER['REQUEST_URI'], '?');
-	// Update the 'path' parameter using the temporary variable
 	'path' => ($batcache->pos = $pos) ? substr($_SERVER['REQUEST_URI'], 0, $batcache->pos) : $_SERVER['REQUEST_URI'],
 	'query' => $batcache->query,
 	'extra' => $batcache->unique
