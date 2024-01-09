@@ -426,7 +426,10 @@ if ( isset( $_SERVER['QUERY_STRING'] ) )
 $batcache->keys = array(
 	'host' => $_SERVER['HTTP_HOST'],
 	'method' => $_SERVER['REQUEST_METHOD'],
-	'path' => ( $batcache->pos = strpos($_SERVER['REQUEST_URI'], '?') ) ? substr($_SERVER['REQUEST_URI'], 0, $batcache->pos) : $_SERVER['REQUEST_URI'],
+	// Assign the value to a temporary variable
+	$pos = strpos($_SERVER['REQUEST_URI'], '?');
+	// Update the 'path' parameter using the temporary variable
+	'path' => ($batcache->pos = $pos) ? substr($_SERVER['REQUEST_URI'], 0, $batcache->pos) : $_SERVER['REQUEST_URI'],
 	'query' => $batcache->query,
 	'extra' => $batcache->unique
 );
