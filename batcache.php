@@ -23,16 +23,24 @@ add_action('clean_post_cache', 'batcache_post');
 //add_action('edit_comment',          'batcache_comment');
 
 function batcache_post($post_id) {
-	global $batcache;
+global $batcache;
 
-	$post = get_post($post_id);
-	if ( $post->post_type == 'revision' || ! in_array( get_post_status($post_id), array( 'publish', 'trash' ) ) )
-		return;
+// Check if $post_id is not null and if the post exists
+if (empty($post_id) || !get_post($post_id)) {
+	return;
+}
 
-	$home = trailingslashit( get_option('home') );
-	batcache_clear_url( $home );
-	batcache_clear_url( $home . 'feed/' );
-	batcache_clear_url( get_permalink($post_id) );
+$post = get_post($post_id);
+
+// Check if $post is null
+if (!$post || $post->post_type == 'revision' || !in_array(get_post_status($post_id), array('publish', 'trash'))) {
+	return;
+}
+
+$home = trailingslashit(get_option('home'));
+batcache_clear_url($home);
+batcache_clear_url($home . 'feed/');
+batcache_clear_url(get_permalink($post_id));
 }
 
 function batcache_clear_url($url) {
