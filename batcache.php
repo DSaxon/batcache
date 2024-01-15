@@ -58,13 +58,22 @@ function batcache_clear_url($url) {
 	wp_cache_add("{$url_key}_version", 0, $batcache->group);
 	$retval = wp_cache_incr("{$url_key}_version", 1, $batcache->group);
 
-	$batcache_no_remote_group_key = array_search( $batcache->group, (array) $wp_object_cache->no_remote_groups );
-	if ( false !== $batcache_no_remote_group_key ) {
-		// The *_version key needs to be replicated remotely, otherwise invalidation won't work.
-		// The race condition here should be acceptable.
-		unset( $wp_object_cache->no_remote_groups[ $batcache_no_remote_group_key ] );
-		$retval = wp_cache_set( "{$url_key}_version", $retval, $batcache->group );
-		$wp_object_cache->no_remote_groups[ $batcache_no_remote_group_key ] = $batcache->group;
+	$batcache_no_remote_group_key = false;
+
+	// Check if the property is set before accessing it
+	if ( isset( $wp_object_cache->no_remote_groups ) && is_array( $wp_object_cache->no_remote_groups ) ) {
+		$batcache_no_remote_group_key = array_search( $batcache->group, (array) $wp_object_cache->no_remote_groups );
+
+		if ( false !== $batcache_no_remote_group_key ) {
+			// The *_version key needs to be replicated remotely, otherwise invalidation won't work.
+			// The race condition here should be acceptable.
+			unset( $wp_object_cache->no_remote_groups[ $batcache_no_remote_group_key ] );
+			$retval = wp_cache_set( "{$url_key}_version", $retval, $batcache->group );
+			$wp_object_cache->no_remote_groups[ $batcache_no_remote_group_key ] = $batcache->group;
+		}
+	} else {
+		// Handle the case when $wp_object_cache->no_remote_groups is not set
+		// You might want to log a warning or handle it based on your needs
 	}
 
 	return $retval;
